@@ -21,6 +21,20 @@ SERVER = BASE / "recent_files_server.py"
 URL = "http://localhost:8082/recent-files.html"
 PORT = 8082
 _icon_ref = None
+LOCK_FILE = os.path.join(os.environ.get("TEMP", "."), "recent_files_tray.lock")
+
+
+def single_instance() -> bool:
+    if os.path.exists(LOCK_FILE):
+        try:
+            with open(LOCK_FILE) as f:
+                os.kill(int(f.read().strip()), 0)
+            return False
+        except (ProcessLookupError, ValueError, OSError):
+            pass
+    with open(LOCK_FILE, "w") as f:
+        f.write(str(os.getpid()))
+    return True
 
 
 def port_open() -> bool:
@@ -139,11 +153,17 @@ def tooltip_loop() -> None:
 
 
 def quit_app(icon, _item=None) -> None:
+    try:
+        os.remove(LOCK_FILE)
+    except OSError:
+        pass
     icon.stop()
 
 
 def main() -> None:
     global _icon_ref
+    if not single_instance():
+        return
     os.chdir(BASE)
     ensure_server()
     _icon_ref = pystray.Icon("recent_files", make_icon(), "קבצים אחרונים", build_menu())
