@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>קבצים אחרונים — לפי פרויקט</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#050508;--surface:#13131f;--surface2:#1a1a2a;
+  --border:rgba(124,106,245,.18);--text:#eceaf8;--muted:#8b89a8;
+  --accent:#7c6af5;--gold:#f5c842;--green:#4ade80;
+  --mono:'JetBrains Mono',monospace;--body:'Rubik',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:var(--body),'Segoe UI','Arial Hebrew',sans-serif;
+  background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(124,106,245,.2),transparent 60%),var(--bg);
+  color:var(--text);min-height:100vh;line-height:1.5;
+}
+.wrap{max-width:1200px;margin:0 auto;padding:1.5rem 1.25rem 3rem}
+.topbar{display:flex;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap}
+.topbar a{
+  color:var(--muted);text-decoration:none;font-size:.85rem;
+  padding:.3rem .6rem;border:1px solid var(--border);border-radius:6px;transition:.2s;
+}
+.topbar a:hover{color:var(--gold);border-color:var(--gold)}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:1rem;margin-bottom:1.5rem}
+h1{font-size:1.6rem;font-weight:700}
+h1 span{color:var(--gold)}
+.sub{color:var(--muted);font-size:.9rem}
+.controls{
+  display:flex;flex-wrap:wrap;gap:.6rem;margin-inline-start:auto;align-items:center;
+}
+select,button,input{
+  font-family:inherit;background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);border-radius:8px;padding:.45rem .75rem;font-size:.85rem;
+}
+button{cursor:pointer;transition:.2s}
+button:hover,select:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);font-weight:600}
+button.active-view{background:rgba(124,106,245,.3);border-color:var(--accent)}
+.stats{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;margin-bottom:1.25rem;
+}
+.stat{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.9rem 1rem;
+}
+.stat .n{font-size:1.5rem;font-weight:700;color:var(--gold)}
+.stat .l{font-size:.78rem;color:var(--muted)}
+.toolbar{display:flex;flex-wrap:wrap;gap:.6rem;margin-bottom:1rem;align-items:center}
+.search{flex:1;min-width:200px;max-width:360px}
+.filters{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem}
+.chip{
+  padding:.35rem .7rem;border-radius:999px;font-size:.8rem;cursor:pointer;
+  border:1px solid var(--border);background:var(--surface);transition:.2s;
+}
+.chip:hover,.chip.active{background:rgba(124,106,245,.25);border-color:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+thead th{
+  text-align:right;padding:.65rem .75rem;color:var(--muted);font-weight:600;
+  border-bottom:1px solid var(--border);font-size:.78rem;white-space:nowrap;
+}
+tbody tr{border-bottom:1px solid rgba(255,255,255,.04);transition:.15s}
+tbody tr:hover{background:rgba(124,106,245,.08)}
+tbody tr.today{background:rgba(74,222,128,.06)}
+td{padding:.6rem .75rem;vertical-align:middle}
+.name-cell{max-width:280px}
+.fname{font-weight:600;word-break:break-all}
+.fpath{font-family:var(--mono);font-size:.72rem;color:var(--muted);margin-top:.15rem;word-break:break-all}
+.proj{display:inline-flex;align-items:center;gap:.35rem;white-space:nowrap}
+.proj-icon{font-size:1.1rem}
+.badge{
+  display:inline-block;padding:.15rem .45rem;border-radius:4px;
+  font-size:.72rem;font-family:var(--mono);background:rgba(124,106,245,.15);color:var(--accent);
+}
+.rel{font-size:.72rem;color:var(--green);display:block;margin-top:.1rem}
+.time{font-family:var(--mono);font-size:.8rem;white-space:nowrap}
+.size{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
+.actions button{padding:.3rem .5rem;font-size:.75rem;background:transparent}
+.loading,.empty,.error{text-align:center;padding:3rem;color:var(--muted)}
+.error{color:#f87171}
+.error code{background:var(--surface2);padding:.2rem .5rem;border-radius:4px;font-family:var(--mono);font-size:.8rem}
+.spinner{
+  width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.card{
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;
+}
+.table-wrap{overflow-x:auto}
+.group-view{padding:1rem;display:none}
+.group-view.active{display:block}
+.group-section{margin-bottom:1.5rem}
+.group-head{
+  display:flex;align-items:center;gap:.5rem;padding:.6rem .75rem;
+  background:var(--surface2);border-radius:10px;margin-bottom:.5rem;font-weight:600;
+}
+.group-head .cnt{margin-inline-start:auto;color:var(--muted);font-size:.8rem;font-weight:400}
+.group-file{
+  display:flex;align-items:center;gap:.75rem;padding:.5rem .75rem;
+  border-bottom:1px solid rgba(255,255,255,.04);font-size:.85rem;
+}
+.group-file:hover{background:rgba(124,106,245,.06)}
+.group-file .gf-name{flex:1;min-width:0;word-break:break-all}
+.group-file .gf-time{font-family:var(--mono);font-size:.75rem;color:var(--muted);white-space:nowrap}
+.list-view{display:block}
+.list-view.hidden{display:none}
+.toast-wrap{
+  position:fixed;top:1rem;left:50%;transform:translateX(-50%);z-index:9999;
+  display:flex;flex-direction:column;gap:.5rem;max-width:520px;width:calc(100% - 2rem);
+}
+.toast{
+  background:#1a2a1a;border:1px solid rgba(74,222,128,.4);border-radius:12px;
+  padding:.85rem 1rem;box-shadow:0 8px 32px rgba(0,0,0,.4);
+  animation:slideIn .35s ease;
+}
+.toast-head{display:flex;align-items:center;gap:.5rem;font-weight:600;color:var(--green);margin-bottom:.4rem}
+.toast-item{
+  font-size:.82rem;padding:.3rem 0;border-bottom:1px solid rgba(255,255,255,.06);
+  display:flex;gap:.5rem;align-items:center;
+}
+.toast-item:last-child{border:none}
+.toast-close{
+  margin-inline-start:auto;background:transparent;border:none;color:var(--muted);
+  cursor:pointer;font-size:1.1rem;padding:0 .3rem;
+}
+.toast-actions{margin-top:.5rem;display:flex;gap:.5rem}
+.toast-actions button{font-size:.78rem;padding:.3rem .6rem}
+tr.new-file{background:rgba(74,222,128,.1)!important;animation:fadeNew 2s ease}
+.new-tag{
+  font-size:.65rem;background:var(--green);color:#052e16;
+  padding:.1rem .35rem;border-radius:3px;font-weight:700;margin-inline-start:.35rem;
+}
+@keyframes slideIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeNew{0%{background:rgba(74,222,128,.25)}100%{background:rgba(74,222,128,.1)}}
+.chart{display:flex;align-items:flex-end;gap:.4rem;height:80px;margin-bottom:1.25rem;padding:.75rem;background:var(--surface);border:1px solid var(--border);border-radius:12px}
+.chart-bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:.25rem;min-width:0}
+.chart-bar .bar{width:100%;max-width:36px;background:linear-gradient(180deg,var(--accent),rgba(124,106,245,.4));border-radius:4px 4px 0 0;min-height:4px}
+.chart-bar .lbl{font-size:.65rem;color:var(--muted)}
+.chart-bar .cnt{font-size:.7rem;font-family:var(--mono);color:var(--gold)}
+.settings{margin-top:1.5rem;padding:1rem;background:var(--surface);border:1px solid var(--border);border-radius:12px}
+.settings h3{font-size:.95rem;margin-bottom:.75rem;color:var(--gold)}
+.settings label{display:block;font-size:.78rem;color:var(--muted);margin:.5rem 0 .25rem}
+.settings textarea,.settings input[type=number]{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:.5rem;font-family:var(--mono);font-size:.78rem}
+.settings textarea{min-height:70px;resize:vertical}
+.settings .row{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.75rem;align-items:center}
+.settings .ok{color:var(--green);font-size:.8rem}
+@media(max-width:700px){
+  .hide-sm{display:none}
+  h1{font-size:1.25rem}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="topbar">
+    <a href="portfolio.html">← חזרה לפורטפוליו</a>
+    <a href="http://localhost:8080/portfolio.html">פורטפוליו (שרת 8080)</a>
+  </nav>
+
+  <header>
+    <div>
+      <h1>📂 <span>קבצים אחרונים</span></h1>
+      <p class="sub" id="scanInfo">טוען...</p>
+    </div>
+    <div class="controls">
+      <select id="daysSel">
+        <option value="1">היום + אתמול</option>
+        <option value="7">7 ימים</option>
+        <option value="14">14 ימים</option>
+        <option value="30" selected>30 ימים</option>
+        <option value="60">60 ימים</option>
+        <option value="90">90 ימים</option>
+      </select>
+      <select id="extSel">
+        <option value="">כל הסוגים</option>
+      </select>
+      <select id="sortSel">
+        <option value="created">מיון: תאריך יצירה</option>
+        <option value="modified">מיון: תאריך שינוי</option>
+        <option value="name">מיון: שם</option>
+        <option value="project">מיון: פרויקט</option>
+        <option value="size">מיון: גודל</option>
+      </select>
+      <button id="viewTable" class="active-view" title="תצוגת טבלה">☰</button>
+      <button id="viewGroup" title="קיבוץ לפי פרויקט">📁</button>
+      <button id="exportBtn" title="ייצוא Excel">📊 Excel</button>
+      <button id="settingsBtn" title="הגדרות">⚙️</button>
+      <button class="primary" id="refreshBtn">רענון</button>
+    </div>
+  </header>
+
+  <div class="stats" id="stats"></div>
+  <div class="chart" id="chart"></div>
+
+  <div class="toolbar">
+    <input class="search" type="search" id="searchInp" placeholder="חיפוש לפי שם קובץ, נתיב או פרויקט...">
+    <span class="chip" id="quickHour" data-q="hour">⏱️ שעה אחרונה</span>
+    <span class="chip" id="quickToday" data-q="today">📅 היום</span>
+    <span class="chip" id="quickAll" data-q="all">הכל</span>
+  </div>
+
+  <div class="filters" id="projFilters"></div>
+
+  <div class="card">
+    <div class="table-wrap list-view" id="listView">
+      <table>
+        <thead>
+          <tr>
+            <th>קובץ</th>
+            <th>פרויקט</th>
+            <th>נוצר</th>
+            <th class="hide-sm">שונה</th>
+            <th class="hide-sm">גודל</th>
+            <th>פעולות</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="group-view" id="groupView"></div>
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      סורק קבצים במחשב...
+    </div>
+    <div class="empty" id="empty" style="display:none">לא נמצאו קבצים בטווח שנבחר</div>
+  </div>
+
+  <div class="settings" id="settingsPanel" style="display:none">
+    <h3>⚙️ הגדרות סריקה</h3>
+    <label>תיקיות נוספות (שורה לכל נתיב)</label>
+    <textarea id="cfgExtra"></textarea>
+    <label>תיקיות להחרגה (שם תיקייה)</label>
+    <textarea id="cfgExclude"></textarea>
+    <label>מרווח מעקב ברקע (שניות)</label>
+    <input type="number" id="cfgInterval" min="30" max="600" value="120">
+    <div class="row">
+      <label><input type="checkbox" id="cfgNotify" checked> התראות Windows</label>
+      <button class="primary" id="cfgSave">שמור הגדרות</button>
+      <span class="ok" id="cfgOk"></span>
+    </div>
+  </div>
+</div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+const API = '/api/files';
+let allFiles = [];
+let activeProject = 'all';
+let viewMode = 'table';
+let newPaths = new Set();
+let quickFilter = 'all';
+
+const EXT_ICON = {
+  html:'🌐', htm:'🌐', css:'🎨', js:'⚡', ts:'⚡', py:'🐍', pyw:'🐍',
+  json:'📋', md:'📝', txt:'📝', bat:'⚙️', ps1:'⚙️', ini:'⚙️',
+  png:'🖼️', jpg:'🖼️', jpeg:'🖼️', gif:'🖼️', svg:'🖼️',
+  zip:'📦', pdf:'📕', xlsx:'📊', csv:'📊', docx:'📘',
+};
+function extIcon(ext) { return EXT_ICON[ext] || '📄'; }
+
+function fmtDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleString('he-IL', {
+    day:'2-digit', month:'2-digit', year:'numeric',
+    hour:'2-digit', minute:'2-digit'
+  });
+}
+
+function relTime(iso) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'עכשיו';
+  if (m < 60) return `לפני ${m} דק׳`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `לפני ${h} שע׳`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `לפני ${d} ימים`;
+  return '';
+}
+
+function isToday(iso) {
+  const d = new Date(iso), n = new Date();
+  return d.getDate() === n.getDate() && d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear();
+}
+
+function fmtSize(n) {
+  if (n < 1024) return n + ' B';
+  if (n < 1048576) return (n/1024).toFixed(1) + ' KB';
+  if (n < 1073741824) return (n/1048576).toFixed(1) + ' MB';
+  return (n/1073741824).toFixed(1) + ' GB';
+}
+
+async function openFolder(path) {
+  await fetch(`/api/open?mode=folder&path=${encodeURIComponent(path)}`);
+}
+
+async function openFile(path) {
+  const r = await fetch(`/api/open?mode=file&path=${encodeURIComponent(path)}`);
+  const d = await r.json();
+  if (!d.ok) alert(d.msg || 'לא ניתן לפתוח');
+}
+
+async function copyPath(path) {
+  try {
+    await navigator.clipboard.writeText(path);
+  } catch {
+    prompt('העתק נתיב:', path);
+  }
+}
+
+async function load(refresh = false) {
+  const days = document.getElementById('daysSel').value;
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('empty').style.display = 'none';
+  document.getElementById('tbody').innerHTML = '';
+  document.getElementById('groupView').innerHTML = '';
+
+  const url = `${API}?days=${days}&limit=500${refresh ? '&refresh=1' : ''}`;
+  try {
+    const r = await fetch(url);
+    const data = await r.json();
+    allFiles = data.files || [];
+    if (refresh && data.new_count > 0) {
+      newPaths = new Set((data.new_files || []).map(f => f.path));
+      showNewToast(data.new_files || []);
+    } else if (!refresh) {
+      newPaths = new Set();
+    }
+    const newHint = data.new_count > 0 && newPaths.size ? ` · ${newPaths.size} חדשים` : '';
+    document.getElementById('scanInfo').textContent =
+      `נסרקו ${data.total} קבצים · ${data.scan_ms}ms · ${fmtDate(data.scanned_at)}${newHint}`;
+    renderExtFilter();
+    renderStats();
+    renderChart();
+    renderProjectFilters();
+    render();
+  } catch (e) {
+    document.getElementById('loading').innerHTML =
+      `<div class="error">שגיאה בחיבור לשרת<br><br>הפעל: <code>הפעל קבצים אחרונים.bat</code> משולחן העבודה</div>`;
+  }
+}
+
+function renderExtFilter() {
+  const exts = [...new Set(allFiles.map(f => f.ext).filter(e => e && e !== '—'))].sort();
+  const sel = document.getElementById('extSel');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">כל הסוגים</option>' +
+    exts.map(e => `<option value="${esc(e)}">.${esc(e)}</option>`).join('');
+  sel.value = exts.includes(cur) ? cur : '';
+}
+
+function renderChart() {
+  const map = {};
+  const now = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    map[key] = { lbl: d.toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric' }), cnt: 0 };
+  }
+  allFiles.forEach(f => {
+    const key = (f.created || '').slice(0, 10);
+    if (map[key]) map[key].cnt++;
+  });
+  const vals = Object.values(map);
+  const max = Math.max(...vals.map(v => v.cnt), 1);
+  document.getElementById('chart').innerHTML = vals.map(({ lbl, cnt }) =>
+    `<div class="chart-bar"><span class="cnt">${cnt}</span><div class="bar" style="height:${Math.max(8, cnt / max * 60)}px"></div><span class="lbl">${lbl}</span></div>`
+  ).join('');
+}
+
+async function loadConfig() {
+  try {
+    const r = await fetch('/api/config');
+    const c = await r.json();
+    document.getElementById('cfgExtra').value = (c.extra_folders || []).join('\n');
+    document.getElementById('cfgExclude').value = (c.exclude_folders || []).join('\n');
+    document.getElementById('cfgInterval').value = c.watch_interval_sec || 120;
+    document.getElementById('cfgNotify').checked = c.notify_windows !== false;
+  } catch {}
+}
+
+async function saveConfig() {
+  const body = {
+    extra_folders: document.getElementById('cfgExtra').value.split('\n').map(s=>s.trim()).filter(Boolean),
+    exclude_folders: document.getElementById('cfgExclude').value.split('\n').map(s=>s.trim()).filter(Boolean),
+    watch_interval_sec: parseInt(document.getElementById('cfgInterval').value, 10) || 120,
+    notify_windows: document.getElementById('cfgNotify').checked,
+  };
+  const r = await fetch('/api/config', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  if (r.ok) {
+    document.getElementById('cfgOk').textContent = 'נשמר ✓';
+    setTimeout(() => document.getElementById('cfgOk').textContent = '', 3000);
+    load(true);
+  }
+}
+
+function renderStats() {
+  const projects = {};
+  const today = allFiles.filter(f => isToday(f.created)).length;
+  allFiles.forEach(f => { projects[f.project] = (projects[f.project]||0) + 1; });
+  const top = Object.entries(projects).sort((a,b)=>b[1]-a[1]).slice(0,2);
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="n">${allFiles.length}</div><div class="l">קבצים</div></div>
+    <div class="stat"><div class="n">${today}</div><div class="l">נוצרו היום</div></div>
+    <div class="stat"><div class="n">${Object.keys(projects).length}</div><div class="l">פרויקטים</div></div>
+    ${top.map(([n,c])=>`<div class="stat"><div class="n">${c}</div><div class="l">${esc(n)}</div></div>`).join('')}
+  `;
+}
+
+function renderProjectFilters() {
+  const counts = {};
+  allFiles.forEach(f => { counts[f.project] = (counts[f.project]||0) + 1; });
+  const sorted = [...new Set(allFiles.map(f => f.project))].sort((a,b)=>(counts[b]||0)-(counts[a]||0));
+  const el = document.getElementById('projFilters');
+  el.innerHTML = `<span class="chip ${activeProject==='all'?'active':''}" data-p="all">הכל (${allFiles.length})</span>` +
+    sorted.map(p => {
+      const icon = allFiles.find(f=>f.project===p)?.project_icon || '📁';
+      return `<span class="chip ${activeProject===p?'active':''}" data-p="${escAttr(p)}">${icon} ${esc(p)} (${counts[p]})</span>`;
+    }).join('');
+  el.querySelectorAll('.chip').forEach(c => c.onclick = () => {
+    activeProject = c.dataset.p;
+    el.querySelectorAll('.chip').forEach(x => x.classList.toggle('active', x.dataset.p === activeProject));
+    render();
+  });
+}
+
+function getFiltered() {
+  const q = document.getElementById('searchInp').value.trim().toLowerCase();
+  const sort = document.getElementById('sortSel').value;
+  const ext = document.getElementById('extSel').value;
+  let list = [...allFiles];
+  if (activeProject !== 'all') list = list.filter(f => f.project === activeProject);
+  if (ext) list = list.filter(f => f.ext === ext);
+  if (quickFilter === 'hour') {
+    const cutoff = Date.now() / 1000 - 3600;
+    list = list.filter(f => f.created_ts > cutoff || f.modified_ts > cutoff);
+  } else if (quickFilter === 'today') {
+    list = list.filter(f => isToday(f.created) || isToday(f.modified));
+  }
+  if (q) list = list.filter(f =>
+    f.name.toLowerCase().includes(q) ||
+    f.path.toLowerCase().includes(q) ||
+    f.project.toLowerCase().includes(q)
+  );
+  const keys = { created:'created_ts', modified:'modified_ts', name:'name', project:'project', size:'size' };
+  const k = keys[sort] || 'created_ts';
+  list.sort((a,b) => {
+    if (k === 'name' || k === 'project') return (a[k]||'').localeCompare(b[k]||'', 'he');
+    return (b[k]||0) - (a[k]||0);
+  });
+  return list;
+}
+
+function render() {
+  const list = getFiltered();
+  document.getElementById('loading').style.display = 'none';
+  const empty = !list.length;
+  document.getElementById('empty').style.display = empty ? 'block' : 'none';
+
+  if (viewMode === 'group') {
+    document.getElementById('listView').classList.add('hidden');
+    document.getElementById('groupView').classList.add('active');
+    renderGroup(list);
+  } else {
+    document.getElementById('listView').classList.remove('hidden');
+    document.getElementById('groupView').classList.remove('active');
+    renderTable(list);
+  }
+}
+
+function showNewToast(files) {
+  const wrap = document.getElementById('toastWrap');
+  const items = files.slice(0, 8).map(f =>
+    `<div class="toast-item"><span>${f.project_icon}</span><span>${esc(f.project)}</span><strong>${esc(f.name)}</strong></div>`
+  ).join('');
+  const more = files.length > 8 ? `<div class="toast-item" style="color:var(--muted)">+ עוד ${files.length - 8} קבצים</div>` : '';
+  wrap.innerHTML = `<div class="toast">
+    <div class="toast-head">🆕 ${files.length} קבצים חדשים זוהו<button class="toast-close" onclick="dismissToast()">✕</button></div>
+    ${items}${more}
+    <div class="toast-actions">
+      <button onclick="filterNewOnly()">הצג רק חדשים</button>
+      <button onclick="dismissToast()">סגור</button>
+    </div>
+  </div>`;
+  setTimeout(dismissToast, 15000);
+}
+
+function dismissToast() {
+  document.getElementById('toastWrap').innerHTML = '';
+}
+
+function filterNewOnly() {
+  dismissToast();
+  document.getElementById('searchInp').value = '';
+  activeProject = 'all';
+  document.getElementById('extSel').value = '';
+  const list = allFiles.filter(f => newPaths.has(f.path));
+  if (viewMode === 'group') renderGroup(list);
+  else {
+    document.getElementById('listView').classList.remove('hidden');
+    document.getElementById('groupView').classList.remove('active');
+    renderTable(list);
+  }
+  document.getElementById('empty').style.display = list.length ? 'none' : 'block';
+}
+
+function exportExcel() {
+  const list = getFiltered();
+  if (!list.length) { alert('אין קבצים לייצוא'); return; }
+  const headers = ['שם קובץ','פרויקט','נוצר','שונה','גודל','סוג','נתיב'];
+  const rows = list.map(f => [
+    f.name, f.project, fmtDate(f.created), fmtDate(f.modified),
+    fmtSize(f.size), f.ext, f.path
+  ]);
+  const csv = [headers, ...rows].map(row =>
+    row.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')
+  ).join('\r\n');
+  const blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `קבצים-אחרונים-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function renderTable(list) {
+  const tbody = document.getElementById('tbody');
+  if (!list.length) { tbody.innerHTML = ''; return; }
+  tbody.innerHTML = list.map(f => `
+    <tr class="${isToday(f.created)?'today':''}${newPaths.has(f.path)?' new-file':''}">
+      <td class="name-cell">
+        <div class="fname">${extIcon(f.ext)} ${esc(f.name)}${newPaths.has(f.path)?'<span class="new-tag">חדש</span>':''}</div>
+        <div class="fpath">${esc(f.folder)}</div>
+      </td>
+      <td><span class="proj"><span class="proj-icon">${f.project_icon}</span>${esc(f.project)}</span></td>
+      <td class="time">${fmtDate(f.created)}<span class="rel">${relTime(f.created)}</span></td>
+      <td class="time hide-sm">${fmtDate(f.modified)}</td>
+      <td class="size hide-sm">${fmtSize(f.size)} <span class="badge">${esc(f.ext)}</span></td>
+      <td class="actions">
+        <button onclick="openFile('${escAttr(f.path)}')" title="פתח קובץ">📄</button>
+        <button onclick="openFolder('${escAttr(f.path)}')" title="פתח תיקייה">📁</button>
+        <button onclick="copyPath('${escAttr(f.path)}')" title="העתק נתיב">📋</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderGroup(list) {
+  const groups = {};
+  list.forEach(f => {
+    if (!groups[f.project]) groups[f.project] = { icon: f.project_icon, files: [] };
+    groups[f.project].files.push(f);
+  });
+  const sorted = Object.entries(groups).sort((a,b) => b[1].files.length - a[1].files.length);
+  document.getElementById('groupView').innerHTML = sorted.map(([proj, g]) => `
+    <div class="group-section">
+      <div class="group-head">
+        <span>${g.icon}</span><span>${esc(proj)}</span>
+        <span class="cnt">${g.files.length} קבצים</span>
+      </div>
+      ${g.files.map(f => `
+        <div class="group-file">
+          <span class="badge">${esc(f.ext)}</span>
+          <span class="gf-name">${esc(f.name)}</span>
+          <span class="gf-time">${relTime(f.created) || fmtDate(f.created)}</span>
+          <button onclick="openFile('${escAttr(f.path)}')" title="פתח">📄</button>
+          <button onclick="copyPath('${escAttr(f.path)}')" title="העתק">📋</button>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) {
+  return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+}
+
+document.getElementById('refreshBtn').onclick = () => load(true);
+document.getElementById('exportBtn').onclick = exportExcel;
+document.getElementById('settingsBtn').onclick = () => {
+  const p = document.getElementById('settingsPanel');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+  if (p.style.display === 'block') loadConfig();
+};
+document.getElementById('cfgSave').onclick = saveConfig;
+document.getElementById('daysSel').onchange = () => load(true);
+document.getElementById('sortSel').onchange = render;
+document.getElementById('extSel').onchange = render;
+document.getElementById('searchInp').oninput = render;
+document.getElementById('viewTable').onclick = () => {
+  viewMode = 'table';
+  document.getElementById('viewTable').classList.add('active-view');
+  document.getElementById('viewGroup').classList.remove('active-view');
+  render();
+};
+document.getElementById('viewGroup').onclick = () => {
+  viewMode = 'group';
+  document.getElementById('viewGroup').classList.add('active-view');
+  document.getElementById('viewTable').classList.remove('active-view');
+  render();
+};
+function setQuick(q) {
+  quickFilter = q;
+  ['quickHour','quickToday','quickAll'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('active', el.dataset.q === q);
+  });
+  render();
+}
+document.getElementById('quickHour').onclick = () => setQuick('hour');
+document.getElementById('quickToday').onclick = () => setQuick('today');
+document.getElementById('quickAll').onclick = () => setQuick('all');
+setQuick('all');
+
+load(true);
+setInterval(() => load(true), 120000);
+</script>
+</body>
+</html>

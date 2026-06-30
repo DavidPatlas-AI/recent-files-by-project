@@ -1,0 +1,12 @@
+{
+  "extra_folders": [],
+  "exclude_folders": [
+    "portfolio-git-temp",
+    "node_modules"
+  ],
+  "project_aliases": {},
+  "watch_interval_sec": 120,
+  "notify_windows": true,
+  "scan_limit": 500,
+  "scan_days_default": 30
+}
