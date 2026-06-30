@@ -379,6 +379,27 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         parsed = urlparse(self.path)
 
+        if parsed.path == "/api/rainmeter":
+            files = _cache["files"]
+            if not files:
+                files, _ = scan_files(days=1, limit=20)
+            today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
+            today = [f for f in files if f["created_ts"] >= today_start]
+            if today:
+                f = today[0]
+                text = f"{len(today)} קבצים היום · {f['name']} ({f['project']})"
+            elif files:
+                f = files[0]
+                text = f"אחרון: {f['name']} ({f['project']})"
+            else:
+                text = "אין קבצים — הפעל שרת"
+            body = text.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(body)
+            return
+
         if parsed.path == "/api/config":
             body = json.dumps(load_config(), ensure_ascii=False).encode("utf-8")
             self.send_response(200)

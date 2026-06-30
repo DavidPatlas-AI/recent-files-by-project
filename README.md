@@ -12,6 +12,7 @@
 - התראות Windows על קבצים חדשים (מעקב ברקע כל 2 דקות)
 - ייצוא CSV ל-Excel
 - System Tray עם תפריט קבצים אחרונים
+- ווידג'ט Rainmeter לשולחן העבודה
 - קובץ הגדרות לתיקיות מותאמות אישית
 
 ## התקנה
@@ -28,6 +29,19 @@ pip install -r requirements.txt
 | `launch-tray.bat` | אייקון System Tray |
 
 פתח: **http://localhost:8082/recent-files.html**
+
+### Rainmeter
+
+העתק את `rainmeter/RecentFiles.ini` ל:
+`Documents\Rainmeter\Skins\RecentFiles\`
+
+טען את הסקין ב-Rainmeter (דורש שרת פעיל על פורט 8082).
+
+### סנכרון ל-GitHub
+
+```powershell
+.\sync-publish.ps1
+```
 
 ## הגדרות
 
