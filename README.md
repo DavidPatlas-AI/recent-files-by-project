@@ -37,6 +37,16 @@ pip install -r requirements.txt
 
 טען את הסקין ב-Rainmeter (דורש שרת פעיל על פורט 8082).
 
+### קיצור מקלדת
+
+`Win+Shift+F` — פתיחת הממשק מכל מקום (דורש `recent_files_hotkey.pyw` ב-Startup).
+
+### בדיקת סטטוס
+
+```bash
+python desktop_status.py
+```
+
 ### סנכרון ל-GitHub
 
 ```powershell
