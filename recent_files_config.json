@@ -1,5 +1,7 @@
 {
-  "extra_folders": [],
+  "extra_folders": [
+    "C:\\Users\\DAVID\\Desktop\\פרויקטים\\BridgeOS"
+  ],
   "exclude_folders": [
     "portfolio-git-temp",
     "node_modules"
